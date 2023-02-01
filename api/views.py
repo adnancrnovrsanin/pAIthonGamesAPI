@@ -56,6 +56,7 @@ def startingBoard(request):
         request.data['numberOfExpectimaxPlayers'],
         request.data['numberOfMaxNPlayers'],
         request.data['numberOfUserPlayers'],
+        request.data['numberOfMinimaxABPlayers'],
     ))
 
 @api_view(['POST'])
@@ -70,13 +71,19 @@ def aiMove(request):
         )
         return Response({
             'board': new_board,
-            'loosers': getLoosers(new_board)
+            'loosers': getLoosers(new_board),
+            'gameIsOver': game_is_over(new_board)
         })
     else:
         return Response({
             'board': request.data['board'],
-            'loosers': getLoosers(request.data['board'])
+            'loosers': getLoosers(request.data['board']),
+            'gameIsOver': game_is_over(request.data['board'])
         })
-    # return Response({
-    #     "proba": heuristics(request.data['board'])
-    # })
+
+@api_view(['POST'])
+def checkLoosers(request):
+    return Response({
+        "loosers": getLoosers(request.data['board']),
+        "gameIsOver": game_is_over(request.data['board'])
+    })

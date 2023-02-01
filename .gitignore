@@ -3,6 +3,7 @@
 *.pot
 *.pyc
 __pycache__
+__pycache__/*
 db.sqlite3
 media
 
@@ -135,3 +136,6 @@ GitHub.sublime-settings
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+.vscode/settings.json
+pAIthonGamesAPI/__pycache__/settings.cpython-310.pyc
+pAIthonGamesAPI/__pycache__/settings.cpython-310.pyc

@@ -1,9 +1,29 @@
 from collections import deque
 from copy import deepcopy
+import datetime
 from math import sqrt
 import random
 
 random.seed(205)
+
+def getLoosers(board):
+    loosers = []
+    for row in range(len(board)):
+        for col in range(len(board[0])):
+            try:
+                tmp = int(board[row][col])
+                if len(get_possible_moves(board, board[row][col])) == 0:
+                    loosers.append(board[row][col])
+            except:
+                continue
+    return loosers
+
+def is_winner(board, player):
+    if(len(get_possible_moves(board, player)) == 0):
+        return False
+    players = get_all_players(board)
+    players.remove(player)
+    return all(len(get_possible_moves(board, p)) == 0 for p in players)
 
 def board_is_empty(board):
     for row in board:
@@ -40,23 +60,11 @@ def get_all_players(board):
     return players
 
 def game_is_over(board):
-    # flag that tells us if there was already a player with 
-    # possible moves on the board
-    second = False
     if board_is_empty(board):
         return True
-    for row in range(len(board)):
-        for col in range(len(board[0])):
-            try:
-                tmp = int(board[row][col])
-                if len(get_possible_moves(board, board[row][col])) > 0:
-                    if second:
-                        return False
-                    else:
-                        second = True
-            except:
-                continue
-    return True
+    if (len(getLoosers(board)) >= (len(get_all_players(board)) - 1)):
+        return True
+    return False
 
 def get_possible_moves(board, player):
     moves = []
@@ -123,10 +131,11 @@ def bfsSum(startRow, startCol, board):
     density = 0
     while queue:
         cur_node = queue.popleft()
+        if cur_node[2] == 'h':
+            continue
         if cur_node[2] == 'r':
             density += 1
-        else:
-            continue
+        
 
         next_nodes = graph[(cur_node[0], cur_node[1])]
         for next_node in next_nodes:
@@ -153,7 +162,13 @@ def difference_of_density(board, player):
     return difference
 
 def get_score(board, player):
-    return difference_of_distance_from_center(board, player) + 25*difference_of_moves(board, player) + difference_of_density(board, player)
+    if board_is_empty(board):
+        return 0
+    if (len(get_possible_moves(board, player)) == 0):
+        return -float("inf")
+    if (is_winner(board, player)):
+        return float("inf")
+    return 10*difference_of_distance_from_center(board, player) + 25*difference_of_moves(board, player) + 5*difference_of_density(board, player)
 
 def heuristics(board):
     heuristics = {}
@@ -169,13 +184,12 @@ def get_best_scores_starting_with(board):
 
 def get_next_player(board, player):
     all_players = get_all_players(board)
-    if str(int(player) + 1) in all_players:
-        return str(int(player) + 1)
-    else:
-        return "0"
+    all_players.sort()
+    return all_players[(all_players.index(player) + 1) % len(all_players)]
         
-def maxN(board, player, depth):
-    if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0:
+def maxN(board, player, depth, time_to_think, start_time):
+    time_difference = datetime.datetime.now() - start_time
+    if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0 or time_difference.total_seconds() >= time_to_think:
         return [heuristics(board), []]
     best_scores = get_best_scores_starting_with(board)
     moves = get_possible_moves(board, player)
@@ -185,7 +199,7 @@ def maxN(board, player, depth):
         currRow, currCol, row, col = move
         new_board = deepcopy(board)
         make_a_move(currRow, currCol, new_board, row, col, player)
-        scores = maxN(new_board, get_next_player(new_board, player), (depth - 1))[0]
+        scores = maxN(new_board, get_next_player(new_board, player), (depth - 1), time_to_think, start_time)[0]
         if scores[player] > best_scores[player]:
             best_scores = scores
             best_move = move

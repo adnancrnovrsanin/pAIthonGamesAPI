@@ -8,4 +8,5 @@ urlpatterns = [
     path('bole', views.getAgentPathBole),
     path('single/start', views.startingBoard),
     path('single/ai', views.aiMove),
+    path('loosers', views.checkLoosers),
 ]

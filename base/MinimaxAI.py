@@ -1,8 +1,29 @@
 from collections import deque
 from copy import deepcopy
+import datetime
 from math import sqrt
 import random
+
 random.seed(205)
+
+def getLoosers(board):
+    loosers = []
+    for row in range(len(board)):
+        for col in range(len(board[0])):
+            try:
+                tmp = int(board[row][col])
+                if len(get_possible_moves(board, board[row][col])) == 0:
+                    loosers.append(board[row][col])
+            except:
+                continue
+    return loosers
+
+def is_winner(board, player):
+    if(len(get_possible_moves(board, player)) == 0):
+        return False
+    players = get_all_players(board)
+    players.remove(player)
+    return all(len(get_possible_moves(board, p)) == 0 for p in players)
 
 def get_all_players(board):
     players = []
@@ -62,23 +83,11 @@ def get_possible_moves(board, player):
     return moves
 
 def game_is_over(board):
-    # flag that tells us if there was already a player with 
-    # possible moves on the board
-    second = False
     if board_is_empty(board):
         return True
-    for row in range(len(board)):
-        for col in range(len(board[0])):
-            try:
-                tmp = int(board[row][col])
-                if len(get_possible_moves(board, board[row][col])) > 0:
-                    if second:
-                        return False
-                    else:
-                        second = True
-            except:
-                continue
-    return True
+    if (len(getLoosers(board)) >= (len(get_all_players(board)) - 1)):
+        return True
+    return False
 
 def distance_from_center(board, row, col):
     return sqrt(pow((col - round(len(board[0])/2)), 2) + pow((row - round(len(board)/2)), 2))
@@ -90,9 +99,9 @@ def difference_of_distance_from_center(board, player):
             try:
                 tmp = int(board[row][col])
                 if board[row][col] == player:
-                    difference += distance_from_center(board, row, col)
-                else:
                     difference -= distance_from_center(board, row, col)
+                else:
+                    difference += distance_from_center(board, row, col)
             except:
                 continue
     return difference
@@ -152,7 +161,7 @@ def difference_of_density(board, player):
     difference = 0
     for row in range(len(board)):
         for col in range(len(board[0])):
-            try: 
+            try:
                 tmp = int(board[row][col])
                 if board[row][col] == player:
                     difference += check_density(board, board[row][col])
@@ -163,19 +172,23 @@ def difference_of_density(board, player):
     return difference
 
 def heuristic(board, player):
-    return difference_of_distance_from_center(board, player) + 25*difference_of_moves(board, player) + difference_of_density(board, player)
+    if board_is_empty(board):
+        return 0
+    if (len(get_possible_moves(board, player)) == 0):
+        return -float("inf")
+    if (is_winner(board, player)):
+        return float("inf")
+    return 10*difference_of_distance_from_center(board, player) + 25*difference_of_moves(board, player) + 5*difference_of_density(board, player)
 
-def switchPlayer(board, player):
-    players = get_all_players(board)
-    if len(players) > 2:
-        raise Exception("Too many players")
-    if str(int(player) + 1) in players:
-        return str(int(player) + 1)
+def switchPlayer(player):
+    if player == '0':
+        return '1'
     else:
-        return "0"
+        return '0'
     
-def minimax(board, depth, player, max_player):
-    if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0:
+def minimax(board, depth, player, max_player, time_to_think, start_time):
+    time_difference = datetime.datetime.now() - start_time
+    if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0 or time_difference.total_seconds() >= time_to_think:
         return [heuristic(board, player), []]
     if player == max_player:
         best_score = -float("inf")
@@ -186,7 +199,7 @@ def minimax(board, depth, player, max_player):
             currRow, currCol, row, col = move
             new_board = deepcopy(board)
             make_a_move(currRow, currCol, new_board, row, col, player)
-            score = minimax(new_board, (depth - 1), switchPlayer(new_board, player))[0]
+            score = minimax(new_board, (depth - 1), switchPlayer(player), max_player, time_to_think, start_time)[0]
             if score > best_score:
                 best_score = score
                 best_move = move
@@ -200,14 +213,15 @@ def minimax(board, depth, player, max_player):
             currRow, currCol, row, col = move
             new_board = deepcopy(board)
             make_a_move(currRow, currCol, new_board, row, col, player)
-            score = minimax(new_board, (depth - 1), switchPlayer(new_board, player))[0]
+            score = minimax(new_board, (depth - 1), switchPlayer(player), max_player, time_to_think, start_time)[0]
             if score < best_score:
                 best_score = score
                 best_move = move
         return [best_score, best_move]
     
-def minimaxAB(board, depth, alpha, beta, player, max_player):
-    if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0:
+def minimaxAB(board, depth, alpha, beta, player, max_player, time_to_think, start_time):
+    time_difference = datetime.datetime.now() - start_time
+    if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0 or time_difference.total_seconds() >= time_to_think:
         return [heuristic(board, player), []]
     if player == max_player:
         best_score = -float("inf")
@@ -218,7 +232,7 @@ def minimaxAB(board, depth, alpha, beta, player, max_player):
             currRow, currCol, row, col = move
             new_board = deepcopy(board)
             make_a_move(currRow, currCol, new_board, row, col, player)
-            score = minimaxAB(new_board, (depth - 1), alpha, beta, switchPlayer(new_board, player))[0]
+            score = minimaxAB(new_board, (depth - 1), alpha, beta, switchPlayer(player), max_player, time_to_think, start_time)[0]
             if score > best_score:
                 best_score = score
                 best_move = move
@@ -235,7 +249,7 @@ def minimaxAB(board, depth, alpha, beta, player, max_player):
             currRow, currCol, row, col = move
             new_board = deepcopy(board)
             make_a_move(currRow, currCol, new_board, row, col, player)
-            score = minimaxAB(new_board, (depth - 1), alpha, beta, switchPlayer(new_board, player))[0]
+            score = minimaxAB(new_board, (depth - 1), alpha, beta, switchPlayer(player), max_player, time_to_think, start_time)[0]
             if score < best_score:
                 best_score = score
                 best_move = move
@@ -244,8 +258,9 @@ def minimaxAB(board, depth, alpha, beta, player, max_player):
                 break
         return [best_score, best_move]
     
-def expectimax(board, depth, player, max_player):
-    if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0:
+def expectimax(board, depth, player, max_player, time_to_think, start_time):
+    time_difference = datetime.datetime.now() - start_time
+    if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0 or time_difference.total_seconds() >= time_to_think:
         return [heuristic(board, player), []]
     moves = get_possible_moves(board, player)
     random.shuffle(moves)
@@ -256,7 +271,7 @@ def expectimax(board, depth, player, max_player):
             currRow, currCol, row, col = move
             new_board = deepcopy(board)
             make_a_move(currRow, currCol, new_board, row, col, player)
-            score = expectimax(new_board, (depth - 1), switchPlayer(new_board, player), max_player)[0]
+            score = expectimax(new_board, (depth - 1), switchPlayer(player), max_player, time_to_think, start_time)[0]
             if score > best_score:
                 best_score = score
                 best_move = move
@@ -268,6 +283,6 @@ def expectimax(board, depth, player, max_player):
             currRow, currCol, row, col = move
             new_board = deepcopy(board)
             make_a_move(currRow, currCol, new_board, row, col, player)
-            score = expectimax(new_board, (depth - 1), switchPlayer(new_board, player), max_player)[0]
+            score = expectimax(new_board, (depth - 1), switchPlayer(player), max_player, time_to_think, start_time)[0]
             best_score += score
         return [best_score/len(moves), best_move]
