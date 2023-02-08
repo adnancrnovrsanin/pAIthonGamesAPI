@@ -1,19 +1,32 @@
-# function that creates a map with roads and holes 
-# for given number of rows and columns with a random percentage of the map filled with roads with minimum being 80% and maximum being 90%.
+# function that creates a board with roads and holes 
+# for given number of rows and columns with a random percentage of the board filled with roads with minimum being 80% and maximum being 90%.
 import random
 import secrets
 
-def mapBuilder(rows, colums):
+def boardBuilder(rows, colums):
+    print(rows)
+    print(colums)
     random.seed(secrets.token_bytes(16))
-    # create a map with rows and columns
-    map = [['h' for x in range(colums)] for y in range(rows)]
+    # create a board with rows and columns
+    board = [['h' for x in range(colums)] for y in range(rows)]
     # get the number of cells to be filled with roads
-    cells = (rows * colums) * random.uniform(0.95, 0.99)
-    # fill the map with roads
+    cells = (rows * colums) * random.uniform(0.65, 0.85)
+    print(cells)
+    # fill the board with roads
     for i in range(int(cells)):
-        map[random.randint(0, rows - 1)][random.randint(0, colums - 1)] = 'r'
-    # return the map
-    return map
+        # get a random row
+        row = secrets.randbelow(rows)
+        # get a random column
+        column = secrets.randbelow(colums)
+        while(board[row][column] == 'r'):
+            # get a random row
+            row = secrets.randbelow(rows)
+            # get a random column
+            column = secrets.randbelow(colums)
+        # add a road to the board
+        board[row][column] = 'r'
+    # return the board
+    return board
 
 def mapBuilderFinal(rows, columns, numberOfPlayers, numberOfMinimaxPlayers, numberOfExpectimaxPlayers, numberOfMaxNPlayers, numberOfUserPlayers, numberOfMinimaxABPlayers):
     # create a list of available players
@@ -32,9 +45,9 @@ def mapBuilderFinal(rows, columns, numberOfPlayers, numberOfMinimaxPlayers, numb
     aiPlayers = []
     algorithmsInUse = {}
     random.seed(secrets.token_bytes(16))
-    # create a map with rows and columns
-    board = mapBuilder(rows, columns)
-    # fill the map with players
+    # create a board with rows and columns
+    board = boardBuilder(rows, columns)
+    # fill the board with players
     for i in range(numberOfPlayers):
         # get a random row
         row = secrets.randbelow(len(board))
@@ -100,7 +113,7 @@ def mapBuilderFinal(rows, columns, numberOfPlayers, numberOfMinimaxPlayers, numb
             if numberOfUserPlayers == 0:
                 # remove the player from the available players
                 availablePlayers.remove("user")
-        # add the player to the map
+        # add the player to the board
         board[row][column] = str(i)
 
     # return dictionary with the board, the user players, the ai players and the algorithms in use

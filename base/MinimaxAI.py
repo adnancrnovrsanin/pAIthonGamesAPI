@@ -136,11 +136,10 @@ def bfsSum(startRow, startCol, board):
     density = 0
     while queue:
         cur_node = queue.popleft()
-        if cur_node[2] == 'h':
-            continue
-        
         if cur_node[2] == 'r':
             density += 1
+        else:
+            continue
 
         next_nodes = graph[(cur_node[0], cur_node[1])]
         for next_node in next_nodes:
@@ -171,14 +170,14 @@ def difference_of_density(board, player):
                 continue
     return difference
 
-def heuristic(board, player):
+def heuristic(board, player, max_player):
     if board_is_empty(board):
         return 0
     if (len(get_possible_moves(board, player)) == 0):
         return -float("inf")
-    if (is_winner(board, player)):
+    if (is_winner(board, max_player)):
         return float("inf")
-    return 10*difference_of_distance_from_center(board, player) + 25*difference_of_moves(board, player) + 5*difference_of_density(board, player)
+    return 10*difference_of_distance_from_center(board, max_player) + 25*difference_of_moves(board, max_player) + 10*difference_of_density(board, max_player)
 
 def switchPlayer(player):
     if player == '0':
@@ -189,11 +188,10 @@ def switchPlayer(player):
 def minimax(board, depth, player, max_player, time_to_think, start_time):
     time_difference = datetime.datetime.now() - start_time
     if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0 or time_difference.total_seconds() >= time_to_think:
-        return [heuristic(board, player), []]
+        return [heuristic(board, player, max_player), []]
     if player == max_player:
         best_score = -float("inf")
         moves = get_possible_moves(board, player)
-        random.shuffle(moves)
         best_move = moves[0]
         for move in moves:
             currRow, currCol, row, col = move
@@ -207,7 +205,6 @@ def minimax(board, depth, player, max_player, time_to_think, start_time):
     else:
         best_score = float("inf")
         moves = get_possible_moves(board, player)
-        random.shuffle(moves)
         best_move = moves[0]
         for move in moves:
             currRow, currCol, row, col = move
@@ -222,11 +219,10 @@ def minimax(board, depth, player, max_player, time_to_think, start_time):
 def minimaxAB(board, depth, alpha, beta, player, max_player, time_to_think, start_time):
     time_difference = datetime.datetime.now() - start_time
     if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0 or time_difference.total_seconds() >= time_to_think:
-        return [heuristic(board, player), []]
+        return [heuristic(board, player, max_player), []]
     if player == max_player:
         best_score = -float("inf")
         moves = get_possible_moves(board, player)
-        random.shuffle(moves)
         best_move = moves[0]
         for move in moves:
             currRow, currCol, row, col = move
@@ -243,7 +239,6 @@ def minimaxAB(board, depth, alpha, beta, player, max_player, time_to_think, star
     else:
         best_score = float("inf")
         moves = get_possible_moves(board, player)
-        random.shuffle(moves)
         best_move = moves[0]
         for move in moves:
             currRow, currCol, row, col = move
@@ -261,9 +256,8 @@ def minimaxAB(board, depth, alpha, beta, player, max_player, time_to_think, star
 def expectimax(board, depth, player, max_player, time_to_think, start_time):
     time_difference = datetime.datetime.now() - start_time
     if game_is_over(board) or depth == 0 or len(get_possible_moves(board, player)) == 0 or time_difference.total_seconds() >= time_to_think:
-        return [heuristic(board, player), []]
+        return [heuristic(board, player, max_player), []]
     moves = get_possible_moves(board, player)
-    random.shuffle(moves)
     if player == max_player:
         best_score = -float("inf")
         best_move = moves[0]
