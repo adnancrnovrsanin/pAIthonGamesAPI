@@ -136,10 +136,10 @@ def bfsSum(startRow, startCol, board):
     density = 0
     while queue:
         cur_node = queue.popleft()
-        if cur_node[2] == 'r':
-            density += 1
-        else:
+        if cur_node[2] == 'h':
             continue
+        else:
+            density += 1
 
         next_nodes = graph[(cur_node[0], cur_node[1])]
         for next_node in next_nodes:
@@ -177,7 +177,7 @@ def heuristic(board, player, max_player):
         return -float("inf")
     if (is_winner(board, max_player)):
         return float("inf")
-    return 10*difference_of_distance_from_center(board, max_player) + 25*difference_of_moves(board, max_player) + 10*difference_of_density(board, max_player)
+    return 5*difference_of_distance_from_center(board, max_player) + 25*difference_of_moves(board, max_player) + 5*difference_of_density(board, max_player)
 
 def switchPlayer(player):
     if player == '0':
